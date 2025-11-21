@@ -1,9 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net/http"
+	"review/internal/http"
 )
 
+const httpServerAddress string = "0.0.0.0:8080"
+
 func main() {
-	fmt.Println("Hello, world!")
+	log.SetFlags(log.LstdFlags)
+
+	mux := handler.NewMux(struct{}{})
+
+	log.Printf("Starting http-server on %s\n", httpServerAddress)
+	if err := http.ListenAndServe(httpServerAddress, mux); err != nil {
+		log.Fatal("Error while serving http-server: %w", err)
+	}
 }
