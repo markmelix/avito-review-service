@@ -1,6 +1,9 @@
 package service
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type Team struct {
 	Name    string
@@ -18,4 +21,11 @@ type TeamService struct {
 
 func NewTeamService(repo TeamRepo) *TeamService {
 	return &TeamService{repo}
+}
+
+func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User) error {
+	if err := uc.Repo.AddTeam(ctx, name, members); err != nil {
+		return fmt.Errorf("failed creating team with members: %w", err)
+	}
+	return nil
 }
