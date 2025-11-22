@@ -9,6 +9,7 @@ type Team struct {
 
 type TeamRepo interface {
 	AddTeam(ctx context.Context, name string, members []User) error
+	GetTeam(ctx context.Context, name string) (Team, error)
 }
 
 type TeamService struct {
