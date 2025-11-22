@@ -9,11 +9,14 @@ import (
 	"review/internal/repo"
 )
 
+const prAsigneeLimit int = 2
+
 type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
 	GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error)
-	GetUsersToAssign(ctx context.Context, authorId string) ([]domain.User, error)
-	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User) error
+	GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error)
+	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int) error
+	ReassignPullReqReviewer(ctx context.Context, pullReqId, oldReviewerId, newReviewerId string) error
 	MarkPullReqMerged(ctx context.Context, pullReqId string) error
 }
 
@@ -24,6 +27,7 @@ var (
 	ErrReviewerNotAssigned  = errors.New("reviewer is not assigned to this PR")
 	ErrNoReassignCandidate  = errors.New("no active replacement candidate in team")
 	ErrReassignOnMerged     = errors.New("cannot reassign on merged PR")
+	ErrTooMuchAsignees      = errors.New("too much asignees")
 )
 
 type PullReqService struct {
@@ -46,7 +50,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
-	users, err := uc.repo.GetUsersToAssign(ctx, authorId)
+	users, err := uc.repo.GetUsersToAssign(ctx, authorId, prAsigneeLimit)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
@@ -56,10 +60,12 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
-	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, users); err != nil {
+	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, users, prAsigneeLimit); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound
+		case errors.Is(err, repo.ErrAlreadyExists):
+			return ErrTooMuchAsignees
 		default:
 			return fmt.Errorf("while assigning users to pr: %w", err)
 		}
@@ -99,7 +105,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 		return ErrReviewerNotAssigned
 	}
 
-	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId)
+	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId, prAsigneeLimit)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
@@ -115,7 +121,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 
 	user := users[rand.Intn(len(users))]
 
-	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, []domain.User{user}); err != nil {
+	if err := uc.repo.ReassignPullReqReviewer(ctx, pullReqId, oldReviewerId, user.Id); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound

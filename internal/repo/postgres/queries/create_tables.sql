@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS pull_requests (
     author_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     status pr_status NOT NULL DEFAULT 'OPEN'
 );
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pr_id TEXT NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE
+);

@@ -77,7 +77,7 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 	return pr, nil
 }
 
-func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string) ([]domain.User, error) {
+func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit uint) ([]domain.User, error) {
 	tx, err := pg.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error beginning postgres transaction: %w", err)
@@ -110,9 +110,10 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string) ([]do
 		`
 			SELECT id, username, is_active FROM users
 			WHERE team_name = $1 AND is_active = true
-			LIMIT 2
+			LIMIT $2
 		`,
 		teamName,
+		asigneeLimit,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("while querying team members: %w", err)
@@ -132,4 +133,100 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string) ([]do
 	}
 
 	return users, nil
+}
+
+func (pg *postgres) AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int) error {
+	tx, err := pg.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error beginning postgres transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
+
+	exists, err := prExists(ctx, tx, pullReqId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return repo.ErrNotFound
+	}
+
+	if len(reviewers) > asigneeLimit {
+		return repo.ErrAlreadyExists
+	}
+
+	for _, r := range reviewers {
+		tx.Exec(ctx, "INSERT INTO assignments (user_id, pr_id) VALUES ($1, $2)", r.Id, pullReqId)
+	}
+
+	var asigneeAmount int
+	tx.QueryRow(ctx, "SELECT COUNT(*) FROM assignments WHERE pr_id = $1", pullReqId).Scan(&asigneeAmount)
+	if asigneeAmount > asigneeLimit {
+		return repo.ErrAlreadyExists
+	}
+
+	return nil
+}
+
+func (pg *postgres) ReassignPullReqReviewer(ctx context.Context, pullReqId, oldReviewerId, newReviewerId string) error {
+	tx, err := pg.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error beginning postgres transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
+
+	exists, err := prExists(ctx, tx, pullReqId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return repo.ErrNotFound
+	}
+
+	_, err = tx.Exec(ctx, "UPDATE assignments SET user_id = $1 WHERE user_id = $2 AND pr_id = $3", newReviewerId, oldReviewerId, pullReqId)
+	if err != nil {
+		return fmt.Errorf("updating assignments with new user_id: %w", err)
+	}
+
+	return nil
+}
+
+func (pg *postgres) MarkPullReqMerged(ctx context.Context, pullReqId string) error {
+	tx, err := pg.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error beginning postgres transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
+
+	exists, err := prExists(ctx, tx, pullReqId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return repo.ErrNotFound
+	}
+
+	_, err = tx.Exec(ctx, "UPDATE pull_requests SET status = $1 WHERE id = $2", domain.PullReqMerged, pullReqId)
+	if err != nil {
+		return fmt.Errorf("updating pr making it merged: %w", err)
+	}
+
+	return nil
 }
