@@ -13,6 +13,7 @@ type User struct {
 
 type UserRepo interface {
 	SetIsActiveUser(ctx context.Context, id string, isActive bool) error
+	GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error)
 }
 
 type UserService struct {
@@ -28,4 +29,12 @@ func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive 
 		return fmt.Errorf("failed toggling user: %w", err)
 	}
 	return nil
+}
+
+func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error) {
+	prs, err := uc.Repo.GetReviewAssignments(ctx, id)
+	if err != nil {
+		return []PullReq{}, fmt.Errorf("failed getting user pr assignments: %w", err)
+	}
+	return prs, nil
 }
