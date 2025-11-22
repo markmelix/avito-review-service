@@ -3,8 +3,8 @@ package service
 type PullReqStatus string
 
 const (
-	Open   PullReqStatus = "OPEN"
-	Merged PullReqStatus = "MERGED"
+	PullReqOpen   PullReqStatus = "OPEN"
+	PullReqMerged PullReqStatus = "MERGED"
 )
 
 type PullReq struct {
