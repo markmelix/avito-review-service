@@ -11,7 +11,7 @@ import (
 
 type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
-	GetPullReq(ctx context.Context, pullReqId string) (domain.PullReq, error)
+	GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error)
 	GetUsersToAssign(ctx context.Context, authorId string) ([]domain.User, error)
 	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User) error
 	MarkPullReqMerged(ctx context.Context, pullReqId string) error
