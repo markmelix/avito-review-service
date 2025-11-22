@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"review/internal/repo"
 )
 
@@ -66,7 +67,12 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 	}
 
 	if err := uc.Repo.AssignPullReqReviewers(ctx, pullReqId, users); err != nil {
-		return fmt.Errorf("while assinging users to pr: %w", err)
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return ErrPullReqNotFound
+		default:
+			return fmt.Errorf("while assigning users to pr: %w", err)
+		}
 	}
 
 	return nil
@@ -81,5 +87,32 @@ func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) er
 			return fmt.Errorf("while merging pr: %w", err)
 		}
 	}
+	return nil
+}
+
+func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldReviewerId string) error {
+	users, err := uc.Repo.GetUsersToAssign(ctx, oldReviewerId)
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return ErrAuthorNotFound
+		default:
+			return fmt.Errorf("while getting pr users to assign: %w", err)
+		}
+	}
+	if len(users) == 0 {
+		return nil
+	}
+
+	user := users[rand.Intn(len(users))]
+	if err := uc.Repo.AssignPullReqReviewers(ctx, pullReqId, []User{user}); err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return ErrPullReqNotFound
+		default:
+			return fmt.Errorf("while assigning a user with id %v to pr: %w", user.Id, err)
+		}
+	}
+
 	return nil
 }
