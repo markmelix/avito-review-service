@@ -44,9 +44,9 @@ func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]P
 	prs, err := uc.Repo.GetReviewAssignments(ctx, id)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			return []PullReq{}, ErrUserNotFound
+			return nil, ErrUserNotFound
 		}
-		return []PullReq{}, fmt.Errorf("getting user pr assignments: %w", err)
+		return nil, fmt.Errorf("getting user pr assignments: %w", err)
 	}
 	return prs, nil
 }
