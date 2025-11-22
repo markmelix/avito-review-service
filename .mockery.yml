@@ -1,0 +1,10 @@
+template: testify
+packages:
+  "review/internal/service":
+    config:
+      dir: "{{.ConfigDir}}/mocks"
+      filename: "mocks.go"
+      pkgname: "mocks"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      TeamRepo:
