@@ -109,11 +109,12 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asign
 		ctx,
 		`
 			SELECT id, username, is_active FROM users
-			WHERE team_name = $1 AND is_active = true
+			WHERE team_name = $1 AND is_active = true AND id != $3
 			LIMIT $2
 		`,
 		teamName,
 		asigneeLimit,
+		authorId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("while querying team members: %w", err)
