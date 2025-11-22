@@ -23,7 +23,7 @@ var (
 )
 
 type TeamService struct {
-	Repo TeamRepo
+	repo TeamRepo
 }
 
 func NewTeamService(repo TeamRepo) *TeamService {
@@ -31,7 +31,7 @@ func NewTeamService(repo TeamRepo) *TeamService {
 }
 
 func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User) error {
-	if err := uc.Repo.AddTeam(ctx, name, members); err != nil {
+	if err := uc.repo.AddTeam(ctx, name, members); err != nil {
 		if errors.Is(err, repo.ErrAlreadyExists) {
 			return ErrTeamAlreadyExists
 		}
@@ -41,7 +41,7 @@ func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User)
 }
 
 func (uc *TeamService) GetTeam(ctx context.Context, name string) (*Team, error) {
-	team, err := uc.Repo.GetTeam(ctx, name)
+	team, err := uc.repo.GetTeam(ctx, name)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return nil, ErrTeamNotFound

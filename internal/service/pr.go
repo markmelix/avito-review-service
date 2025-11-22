@@ -37,7 +37,7 @@ var (
 )
 
 type PullReqService struct {
-	Repo PullReqRepo
+	repo PullReqRepo
 }
 
 func NewPullReqService(repo PullReqRepo) *PullReqService {
@@ -45,7 +45,7 @@ func NewPullReqService(repo PullReqRepo) *PullReqService {
 }
 
 func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error {
-	if err := uc.Repo.CreatePullReq(ctx, pullReqId, name, authorId); err != nil {
+	if err := uc.repo.CreatePullReq(ctx, pullReqId, name, authorId); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrAlreadyExists):
 			return ErrPullReqAlreadyExists
@@ -56,7 +56,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
-	users, err := uc.Repo.GetUsersToAssign(ctx, authorId)
+	users, err := uc.repo.GetUsersToAssign(ctx, authorId)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
@@ -66,7 +66,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
-	if err := uc.Repo.AssignPullReqReviewers(ctx, pullReqId, users); err != nil {
+	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, users); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound
@@ -79,7 +79,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 }
 
 func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) error {
-	if err := uc.Repo.MarkPullReqMerged(ctx, pullReqId); err != nil {
+	if err := uc.repo.MarkPullReqMerged(ctx, pullReqId); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound
@@ -91,7 +91,7 @@ func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) er
 }
 
 func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldReviewerId string) error {
-	users, err := uc.Repo.GetUsersToAssign(ctx, oldReviewerId)
+	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
@@ -105,7 +105,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 	}
 
 	user := users[rand.Intn(len(users))]
-	if err := uc.Repo.AssignPullReqReviewers(ctx, pullReqId, []User{user}); err != nil {
+	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, []User{user}); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound

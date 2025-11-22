@@ -23,7 +23,7 @@ var (
 )
 
 type UserService struct {
-	Repo UserRepo
+	repo UserRepo
 }
 
 func NewUserService(repo UserRepo) *UserService {
@@ -31,7 +31,7 @@ func NewUserService(repo UserRepo) *UserService {
 }
 
 func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive bool) error {
-	if err := uc.Repo.SetIsActiveUser(ctx, id, isActive); err != nil {
+	if err := uc.repo.SetIsActiveUser(ctx, id, isActive); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return ErrUserNotFound
 		}
@@ -41,7 +41,7 @@ func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive 
 }
 
 func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error) {
-	prs, err := uc.Repo.GetReviewAssignments(ctx, id)
+	prs, err := uc.repo.GetReviewAssignments(ctx, id)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return nil, ErrUserNotFound
