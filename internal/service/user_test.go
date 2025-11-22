@@ -61,7 +61,7 @@ func TestUserService_GetReviewAssignmentsSuccess(t *testing.T) {
 	mockRepo := &mocks.MockUserRepo{}
 	uc := service.NewUserService(mockRepo)
 	id := "u1"
-	expPrs := []service.PullReq{{"pr-1001", "Add search", "u1", service.PullReqOpen}}
+	expPrs := []service.PullReq{{"pr-1001", "Add search", "u1", service.PullReqOpen, nil}}
 	mockRepo.EXPECT().GetReviewAssignments(ctx, id).Return(expPrs, nil)
 
 	prs, err := uc.GetReviewAssignments(ctx, id)
@@ -76,7 +76,7 @@ func TestUserService_GetReviewAssignmentsSuccess(t *testing.T) {
 	if len(prs) != len(expPrs) {
 		t.Fatal("pr slice expected to be of length one would expect, but it is not")
 	}
-	if prs[0] != expPrs[0] {
-		t.Fatalf("first element of pr slice expected to be \"%v\", got: \"%v\"", expPrs[0], prs[0])
+	if prs[0].Id != expPrs[0].Id {
+		t.Fatalf("expected: %v, got: %v", expPrs[0].Id, prs[0].Id)
 	}
 }
