@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"review/internal/repo"
+	"slices"
 )
 
 type PullReqStatus string
@@ -23,8 +24,15 @@ type PullReq struct {
 	Reviewers []User
 }
 
+func (pr PullReq) HasReviewer(id string) bool {
+	return slices.ContainsFunc(pr.Reviewers, func(u User) bool {
+		return u.Id == oldReviewerId
+	})
+}
+
 type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
+	GetPullReq(ctx context.Context, pullReqId string) (PullReq, error)
 	GetUsersToAssign(ctx context.Context, authorId string) ([]User, error)
 	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []User) error
 	MarkPullReqMerged(ctx context.Context, pullReqId string) error
@@ -34,6 +42,9 @@ var (
 	ErrPullReqAlreadyExists = errors.New("pr already exists")
 	ErrAuthorNotFound       = errors.New("pr author not found")
 	ErrPullReqNotFound      = errors.New("pr not found")
+	ErrReviewerNotAssigned  = errors.New("reviewer is not assigned to this PR")
+	ErrNoReassignCandidate  = errors.New("no active replacement candidate in team")
+	ErrReassignOnMerged     = errors.New("cannot reassign on merged PR")
 )
 
 type PullReqService struct {
@@ -91,6 +102,24 @@ func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) er
 }
 
 func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldReviewerId string) error {
+	pr, err := uc.repo.GetPullReq(ctx, pullReqId)
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return ErrPullReqNotFound
+		default:
+			return fmt.Errorf("while getting pr: %w", err)
+		}
+	}
+
+	if pr.Status == PullReqMerged {
+		return ErrReassignOnMerged
+	}
+
+	if !pr.HasReviewer(oldReviewerId) {
+		return ErrReviewerNotAssigned
+	}
+
 	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId)
 	if err != nil {
 		switch {
@@ -100,11 +129,13 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 			return fmt.Errorf("while getting pr users to assign: %w", err)
 		}
 	}
+
 	if len(users) == 0 {
-		return nil
+		return ErrNoReassignCandidate
 	}
 
 	user := users[rand.Intn(len(users))]
+
 	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, []User{user}); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
