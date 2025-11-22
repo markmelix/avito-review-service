@@ -23,7 +23,7 @@ type PullReq struct {
 }
 
 type PullReqRepo interface {
-	CreatePullReq(ctx context.Context, id, name, authorId string) error
+	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
 	GetUsersToAssign(ctx context.Context, authorId string) ([]User, error)
 	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []User) error
 }
@@ -41,8 +41,8 @@ func NewPullReqService(repo PullReqRepo) *PullReqService {
 	return &PullReqService{repo}
 }
 
-func (uc *PullReqService) CreatePullReq(ctx context.Context, id, name, authorId string) error {
-	if err := uc.Repo.CreatePullReq(ctx, id, name, authorId); err != nil {
+func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error {
+	if err := uc.Repo.CreatePullReq(ctx, pullReqId, name, authorId); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrAlreadyExists):
 			return ErrPullReqAlreadyExists
@@ -63,7 +63,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, id, name, authorId 
 		}
 	}
 
-	if err := uc.Repo.AssignPullReqReviewers(ctx, id, users); err != nil {
+	if err := uc.Repo.AssignPullReqReviewers(ctx, pullReqId, users); err != nil {
 		return fmt.Errorf("while assinging users to pr: %w", err)
 	}
 
