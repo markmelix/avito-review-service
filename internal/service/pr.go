@@ -26,11 +26,13 @@ type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
 	GetUsersToAssign(ctx context.Context, authorId string) ([]User, error)
 	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []User) error
+	MarkPullReqMerged(ctx context.Context, pullReqId string) error
 }
 
 var (
 	ErrPullReqAlreadyExists = errors.New("pr already exists")
 	ErrAuthorNotFound       = errors.New("pr author not found")
+	ErrPullReqNotFound      = errors.New("pr not found")
 )
 
 type PullReqService struct {
@@ -67,5 +69,17 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		return fmt.Errorf("while assinging users to pr: %w", err)
 	}
 
+	return nil
+}
+
+func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) error {
+	if err := uc.Repo.MarkPullReqMerged(ctx, pullReqId); err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return ErrPullReqNotFound
+		default:
+			return fmt.Errorf("while merging pr: %w", err)
+		}
+	}
 	return nil
 }
