@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"review/internal/service"
+	"review/internal/service/team"
 )
 
 type TeamHandler struct {
-	usecase *service.TeamService
+	usecase *team.TeamService
 }
 
-func NewTeamHandler(usecase *service.TeamService) *TeamHandler {
+func NewTeamHandler(usecase *team.TeamService) *TeamHandler {
 	return &TeamHandler{usecase}
 }
 

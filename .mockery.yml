@@ -1,12 +1,28 @@
 template: testify
 packages:
-  "review/internal/service":
+  "review/internal/service/team":
     config:
       dir: "{{.ConfigDir}}/mocks"
-      filename: "mocks.go"
+      filename: "team_mock.go"
       pkgname: "mocks"
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       TeamRepo:
+
+  "review/internal/service/user":
+    config:
+      dir: "{{.ConfigDir}}/mocks"
+      filename: "user_mock.go"
+      pkgname: "mocks"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
       UserRepo:
+
+  "review/internal/service/pr":
+    config:
+      dir: "{{.ConfigDir}}/mocks"
+      filename: "pr_mock.go"
+      pkgname: "mocks"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
       PullReqRepo:

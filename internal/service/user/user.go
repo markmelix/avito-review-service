@@ -1,21 +1,16 @@
-package service
+package user
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"review/internal/domain"
 	"review/internal/repo"
 )
 
-type User struct {
-	Id       string
-	Username string
-	IsActive bool
-}
-
 type UserRepo interface {
 	SetIsActiveUser(ctx context.Context, id string, isActive bool) error
-	GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error)
+	GetReviewAssignments(ctx context.Context, id string) ([]domain.PullReq, error)
 }
 
 var (
@@ -40,7 +35,7 @@ func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive 
 	return nil
 }
 
-func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error) {
+func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]domain.PullReq, error) {
 	prs, err := uc.repo.GetReviewAssignments(ctx, id)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {

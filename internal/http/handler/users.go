@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"review/internal/service"
+	"review/internal/service/user"
 )
 
 type UserHandler struct {
-	usecase *service.UserService
+	usecase *user.UserService
 }
 
-func NewUserHandler(usecase *service.UserService) *UserHandler {
+func NewUserHandler(usecase *user.UserService) *UserHandler {
 	return &UserHandler{usecase}
 }
 

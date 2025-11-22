@@ -1,40 +1,19 @@
-package service
+package pr
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"math/rand"
+	"review/internal/domain"
 	"review/internal/repo"
-	"slices"
 )
-
-type PullReqStatus string
-
-const (
-	PullReqOpen   PullReqStatus = "OPEN"
-	PullReqMerged PullReqStatus = "MERGED"
-)
-
-type PullReq struct {
-	Id        string
-	Name      string
-	AuthorId  string
-	Status    PullReqStatus
-	Reviewers []User
-}
-
-func (pr PullReq) HasReviewer(id string) bool {
-	return slices.ContainsFunc(pr.Reviewers, func(u User) bool {
-		return u.Id == oldReviewerId
-	})
-}
 
 type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
-	GetPullReq(ctx context.Context, pullReqId string) (PullReq, error)
-	GetUsersToAssign(ctx context.Context, authorId string) ([]User, error)
-	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []User) error
+	GetPullReq(ctx context.Context, pullReqId string) (domain.PullReq, error)
+	GetUsersToAssign(ctx context.Context, authorId string) ([]domain.User, error)
+	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User) error
 	MarkPullReqMerged(ctx context.Context, pullReqId string) error
 }
 
@@ -112,7 +91,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 		}
 	}
 
-	if pr.Status == PullReqMerged {
+	if pr.Status == domain.PullReqMerged {
 		return ErrReassignOnMerged
 	}
 
@@ -136,7 +115,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 
 	user := users[rand.Intn(len(users))]
 
-	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, []User{user}); err != nil {
+	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, []domain.User{user}); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
 			return ErrPullReqNotFound

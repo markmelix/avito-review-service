@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"review/internal/service"
+	"review/internal/service/pr"
 )
 
 type PullReqHandler struct {
-	usecase *service.PullReqService
+	usecase *pr.PullReqService
 }
 
-func NewPullReqHandler(usecase *service.PullReqService) *PullReqHandler {
+func NewPullReqHandler(usecase *pr.PullReqService) *PullReqHandler {
 	return &PullReqHandler{usecase}
 }
 

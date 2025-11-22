@@ -1,9 +1,9 @@
-package service_test
+package team
 
 import (
 	"context"
 	"errors"
-	"review/internal/service"
+	"review/internal/domain"
 	"review/mocks"
 	"testing"
 )
@@ -11,9 +11,9 @@ import (
 func TestTeamService_SuccessEmptyTeamCreation(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockTeamRepo{}
-	uc := service.NewTeamService(mockRepo)
+	uc := NewTeamService(mockRepo)
 	name := "test_team"
-	members := []service.User{}
+	members := []domain.User{}
 	mockRepo.EXPECT().AddTeam(ctx, name, members).Return(nil)
 
 	err := uc.AddTeam(ctx, name, members)
@@ -26,9 +26,12 @@ func TestTeamService_SuccessEmptyTeamCreation(t *testing.T) {
 func TestTeamService_SuccessTwoMemberTeamCreation(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockTeamRepo{}
-	uc := service.NewTeamService(mockRepo)
+	uc := NewTeamService(mockRepo)
 	name := "test_team"
-	members := []service.User{{"u1", "Alice", true}, {"u2", "Bob", true}}
+	members := []domain.User{
+		{Id: "u1", Username: "Alice", IsActive: true},
+		{Id: "u2", Username: "Bob", IsActive: true},
+	}
 	mockRepo.EXPECT().AddTeam(ctx, name, members).Return(nil)
 
 	err := uc.AddTeam(ctx, name, members)
@@ -41,7 +44,7 @@ func TestTeamService_SuccessTwoMemberTeamCreation(t *testing.T) {
 func TestTeamService_CannotGetNonExistentTeam(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockTeamRepo{}
-	uc := service.NewTeamService(mockRepo)
+	uc := NewTeamService(mockRepo)
 	name := "test_team"
 	expErr := errors.New("team does not exist")
 	mockRepo.EXPECT().GetTeam(ctx, name).Return(nil, expErr)
@@ -60,11 +63,14 @@ func TestTeamService_CannotGetNonExistentTeam(t *testing.T) {
 func TestTeamService_CanGetExistentTeam(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockTeamRepo{}
-	uc := service.NewTeamService(mockRepo)
+	uc := NewTeamService(mockRepo)
 	name := "test_team"
-	members := []service.User{{"u1", "Alice", true}, {"u2", "Bob", true}}
+	members := []domain.User{
+		{Id: "u1", Username: "Alice", IsActive: true},
+		{Id: "u2", Username: "Bob", IsActive: true},
+	}
 	expErr := errors.New("team does not exist")
-	mockRepo.EXPECT().GetTeam(ctx, name).Return(&service.Team{name, members}, expErr)
+	mockRepo.EXPECT().GetTeam(ctx, name).Return(&domain.Team{Name: name, Members: members}, expErr)
 
 	team, err := uc.GetTeam(ctx, name)
 

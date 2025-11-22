@@ -1,20 +1,16 @@
-package service
+package team
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"review/internal/domain"
 	"review/internal/repo"
 )
 
-type Team struct {
-	Name    string
-	Members []User
-}
-
 type TeamRepo interface {
-	AddTeam(ctx context.Context, name string, members []User) error
-	GetTeam(ctx context.Context, name string) (*Team, error)
+	AddTeam(ctx context.Context, name string, members []domain.User) error
+	GetTeam(ctx context.Context, name string) (*domain.Team, error)
 }
 
 var (
@@ -30,7 +26,7 @@ func NewTeamService(repo TeamRepo) *TeamService {
 	return &TeamService{repo}
 }
 
-func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User) error {
+func (uc *TeamService) AddTeam(ctx context.Context, name string, members []domain.User) error {
 	if err := uc.repo.AddTeam(ctx, name, members); err != nil {
 		if errors.Is(err, repo.ErrAlreadyExists) {
 			return ErrTeamAlreadyExists
@@ -40,7 +36,7 @@ func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User)
 	return nil
 }
 
-func (uc *TeamService) GetTeam(ctx context.Context, name string) (*Team, error) {
+func (uc *TeamService) GetTeam(ctx context.Context, name string) (*domain.Team, error) {
 	team, err := uc.repo.GetTeam(ctx, name)
 	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {

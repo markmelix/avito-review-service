@@ -1,9 +1,9 @@
-package service_test
+package user
 
 import (
 	"context"
+	"review/internal/domain"
 	"review/internal/repo"
-	"review/internal/service"
 	"review/mocks"
 	"testing"
 )
@@ -11,22 +11,22 @@ import (
 func TestUserService_SetIsActiveAlertsNotFound(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockUserRepo{}
-	uc := service.NewUserService(mockRepo)
+	uc := NewUserService(mockRepo)
 	id := "u1"
 	isActive := false
 	mockRepo.EXPECT().SetIsActiveUser(ctx, id, isActive).Return(repo.ErrNotFound)
 
 	err := uc.SetIsActiveUser(ctx, id, isActive)
 
-	if err != service.ErrUserNotFound {
-		t.Fatalf("expected: \"%v\" error, got: %v", service.ErrUserNotFound, err)
+	if err != ErrUserNotFound {
+		t.Fatalf("expected: \"%v\" error, got: %v", ErrUserNotFound, err)
 	}
 }
 
 func TestUserService_SetIsActiveExistingUserSuccessfully(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockUserRepo{}
-	uc := service.NewUserService(mockRepo)
+	uc := NewUserService(mockRepo)
 	id := "u1"
 	isActive := false
 	mockRepo.EXPECT().SetIsActiveUser(ctx, id, isActive).Return(nil)
@@ -41,7 +41,7 @@ func TestUserService_SetIsActiveExistingUserSuccessfully(t *testing.T) {
 func TestUserService_GetReviewAssignmentsAlertsNotFound(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockUserRepo{}
-	uc := service.NewUserService(mockRepo)
+	uc := NewUserService(mockRepo)
 	id := "u1"
 	mockRepo.EXPECT().GetReviewAssignments(ctx, id).Return(nil, repo.ErrNotFound)
 
@@ -51,17 +51,23 @@ func TestUserService_GetReviewAssignmentsAlertsNotFound(t *testing.T) {
 		t.Error("first value returned is expected to be nil, got:", prs)
 		t.Fail()
 	}
-	if err != service.ErrUserNotFound {
-		t.Fatalf("expected: \"%v\" error, got: %v", service.ErrUserNotFound, err)
+	if err != ErrUserNotFound {
+		t.Fatalf("expected: \"%v\" error, got: %v", ErrUserNotFound, err)
 	}
 }
 
 func TestUserService_GetReviewAssignmentsSuccess(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := &mocks.MockUserRepo{}
-	uc := service.NewUserService(mockRepo)
+	uc := NewUserService(mockRepo)
 	id := "u1"
-	expPrs := []service.PullReq{{"pr-1001", "Add search", "u1", service.PullReqOpen, nil}}
+	expPrs := []domain.PullReq{{
+		Id:        "pr-1001",
+		Name:      "Add search",
+		AuthorId:  "u1",
+		Status:    domain.PullReqOpen,
+		Reviewers: nil,
+	}}
 	mockRepo.EXPECT().GetReviewAssignments(ctx, id).Return(expPrs, nil)
 
 	prs, err := uc.GetReviewAssignments(ctx, id)

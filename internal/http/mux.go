@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"review/internal/http/handler"
 	"review/internal/service"
+	"review/internal/service/pr"
+	"review/internal/service/team"
+	"review/internal/service/user"
 	"strings"
 )
 
@@ -13,9 +16,9 @@ func joinMux(root *http.ServeMux, inner http.Handler, prefix string) {
 }
 
 func NewMux(repo service.Repo) http.Handler {
-	teamMux := handler.NewTeamMux(handler.NewTeamHandler(service.NewTeamService(repo)))
-	userMux := handler.NewUserMux(handler.NewUserHandler(service.NewUserService(repo)))
-	prMux := handler.NewPullReqMux(handler.NewPullReqHandler(service.NewPullReqService(repo)))
+	teamMux := handler.NewTeamMux(handler.NewTeamHandler(team.NewTeamService(repo)))
+	userMux := handler.NewUserMux(handler.NewUserHandler(user.NewUserService(repo)))
+	prMux := handler.NewPullReqMux(handler.NewPullReqHandler(pr.NewPullReqService(repo)))
 
 	mux := http.NewServeMux()
 	joinMux(mux, teamMux, "/team")
