@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"review/internal/http"
 )
 
 const httpServerAddress string = "0.0.0.0:8080"
@@ -11,7 +10,7 @@ const httpServerAddress string = "0.0.0.0:8080"
 func main() {
 	log.SetFlags(log.LstdFlags)
 
-	mux := handler.NewMux(struct{}{})
+	mux := http.NewServeMux()
 
 	log.Printf("Starting http-server on %s\n", httpServerAddress)
 	if err := http.ListenAndServe(httpServerAddress, mux); err != nil {
