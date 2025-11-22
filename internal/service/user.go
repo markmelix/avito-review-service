@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"review/internal/repo"
 )
 
 type User struct {
@@ -16,6 +18,10 @@ type UserRepo interface {
 	GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error)
 }
 
+var (
+	ErrUserNotFound = errors.New("user not found")
+)
+
 type UserService struct {
 	Repo UserRepo
 }
@@ -26,7 +32,10 @@ func NewUserService(repo UserRepo) *UserService {
 
 func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive bool) error {
 	if err := uc.Repo.SetIsActiveUser(ctx, id, isActive); err != nil {
-		return fmt.Errorf("failed toggling user: %w", err)
+		if errors.Is(err, repo.ErrNotFound) {
+			return ErrUserNotFound
+		}
+		return fmt.Errorf("toggling user: %w", err)
 	}
 	return nil
 }
@@ -34,7 +43,10 @@ func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive 
 func (uc *UserService) GetReviewAssignments(ctx context.Context, id string) ([]PullReq, error) {
 	prs, err := uc.Repo.GetReviewAssignments(ctx, id)
 	if err != nil {
-		return []PullReq{}, fmt.Errorf("failed getting user pr assignments: %w", err)
+		if errors.Is(err, repo.ErrNotFound) {
+			return []PullReq{}, ErrUserNotFound
+		}
+		return []PullReq{}, fmt.Errorf("getting user pr assignments: %w", err)
 	}
 	return prs, nil
 }
