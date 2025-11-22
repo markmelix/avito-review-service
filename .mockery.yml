@@ -8,3 +8,4 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       TeamRepo:
+      UserRepo:
