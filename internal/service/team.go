@@ -1,6 +1,15 @@
 package service
 
-type TeamRepo interface{}
+import "context"
+
+type Team struct {
+	Name    string
+	Members []User
+}
+
+type TeamRepo interface {
+	AddTeam(ctx context.Context, name string, members []User) error
+}
 
 type TeamService struct {
 	Repo TeamRepo
