@@ -12,7 +12,7 @@ type Team struct {
 
 type TeamRepo interface {
 	AddTeam(ctx context.Context, name string, members []User) error
-	GetTeam(ctx context.Context, name string) (Team, error)
+	GetTeam(ctx context.Context, name string) (*Team, error)
 }
 
 type TeamService struct {
@@ -28,4 +28,12 @@ func (uc *TeamService) AddTeam(ctx context.Context, name string, members []User)
 		return fmt.Errorf("failed creating team with members: %w", err)
 	}
 	return nil
+}
+
+func (uc *TeamService) GetTeam(ctx context.Context, name string) (*Team, error) {
+	team, err := uc.Repo.GetTeam(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating team with members: %w", err)
+	}
+	return team, nil
 }
