@@ -1,6 +1,6 @@
 package domain
 
 type Team struct {
-	Name    string
-	Members []User
+	Name    string `json:"team_name"`
+	Members []User `json:"members"`
 }
