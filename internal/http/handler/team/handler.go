@@ -1,4 +1,4 @@
-package handler
+package team
 
 import (
 	"context"
@@ -18,10 +18,6 @@ type TeamHandler struct {
 
 func NewTeamHandler(usecase *team.TeamService) *TeamHandler {
 	return &TeamHandler{usecase}
-}
-
-type TeamAddDto struct {
-	Team domain.Team `json:"team"`
 }
 
 func (h *TeamHandler) add(w http.ResponseWriter, r *http.Request) {

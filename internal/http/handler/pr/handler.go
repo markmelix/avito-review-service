@@ -1,4 +1,4 @@
-package handler
+package pr
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"review/internal/domain"
 	"review/internal/http/helper"
 	"review/internal/service/pr"
 )
@@ -18,32 +17,6 @@ type PullReqHandler struct {
 
 func NewPullReqHandler(usecase *pr.PullReqService) *PullReqHandler {
 	return &PullReqHandler{usecase}
-}
-
-type PullReqCreateReqDto struct {
-	PullReqId   string `json:"pull_request_id"`
-	PullReqName string `json:"pull_request_name"`
-	AuthorId    string `json:"author_id"`
-}
-
-type PullReqCreateRespBody struct {
-	PullReqId   string               `json:"pull_request_id"`
-	PullReqName string               `json:"pull_request_name"`
-	AuthorId    string               `json:"author_id"`
-	Status      domain.PullReqStatus `json:"status"`
-	ReviewerIds []string             `json:"assigned_reviewers"`
-}
-
-type PullReqCreateRespDto struct {
-	PullReq PullReqCreateRespBody `json:"pr"`
-}
-
-func usersToIds(users []domain.User) []string {
-	s := make([]string, len(users))
-	for i, u := range users {
-		s[i] = u.Id
-	}
-	return s
 }
 
 func (h *PullReqHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -90,15 +63,7 @@ func (h *PullReqHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := &PullReqCreateRespDto{
-		PullReq: PullReqCreateRespBody{
-			PullReqId:   prObj.Id,
-			PullReqName: prObj.Name,
-			AuthorId:    prObj.AuthorId,
-			Status:      prObj.Status,
-			ReviewerIds: usersToIds(prObj.Reviewers),
-		},
-	}
+	resp := CreateRespDtoFromPullReq(prObj)
 	respJson, err := json.Marshal(resp)
 	if err != nil {
 		helper.WriteUndefinedError(w, fmt.Errorf("could not convert response to json: %w", err))

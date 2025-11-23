@@ -1,4 +1,4 @@
-package handler
+package user
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"review/internal/domain"
 	"review/internal/http/helper"
 	"review/internal/service/user"
 )
@@ -18,15 +17,6 @@ type UserHandler struct {
 
 func NewUserHandler(usecase *user.UserService) *UserHandler {
 	return &UserHandler{usecase}
-}
-
-type SetIsActiveDto struct {
-	UserId   string `json:"user_id"`
-	IsActive bool   `json:"is_active"`
-}
-
-type UserDto struct {
-	User domain.User `json:"user"`
 }
 
 func (h *UserHandler) setIsActive(w http.ResponseWriter, r *http.Request) {
@@ -81,11 +71,6 @@ func (h *UserHandler) setIsActive(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(respJson)
-}
-
-type GetReviewDto struct {
-	UserId   string           `json:"user_id"`
-	PullReqs []domain.PullReq `json:"pull_requests"`
 }
 
 func (h *UserHandler) getReview(w http.ResponseWriter, r *http.Request) {
