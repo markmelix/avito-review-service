@@ -40,7 +40,16 @@ func (pg *postgres) GetUser(ctx context.Context, id string) (*domain.User, error
 
 	u := &domain.User{Id: id}
 
-	tx.QueryRow(ctx, "SELECT username, is_active, team_name FROM users WHERE id = $1", id).Scan(&u.Username, &u.IsActive, &u.TeamName)
+	tx.QueryRow(
+		ctx,
+		`
+			SELECT u.username, u.is_active, t.name AS team_name
+			FROM users u
+			JOIN teams t ON t.id = u.team_id
+			WHERE u.id = $1
+		`,
+		id,
+	).Scan(&u.Username, &u.IsActive, &u.TeamName)
 	if err != nil {
 		return nil, fmt.Errorf("user is_active update query: %w", err)
 	}

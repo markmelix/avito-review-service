@@ -85,8 +85,10 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 	rows, err := tx.Query(
 		ctx,
 		`
-			SELECT id, username, is_active, team_name FROM users
-			WHERE id IN (SELECT user_id FROM assignments WHERE pr_id = $1)
+			SELECT u.id, u.username, u.is_active, t.name AS team_name
+			FROM users u
+			JOIN teams t ON t.id = u.team_id
+			WHERE u.id IN (SELECT user_id FROM assignments WHERE pr_id = $1)
 		`,
 		pullReqId,
 	)
@@ -132,7 +134,7 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asign
 	}
 
 	var teamName string
-	if err := tx.QueryRow(ctx, "SELECT team_name FROM users WHERE id = $1", authorId).Scan(&teamName); err != nil {
+	if err := tx.QueryRow(ctx, "SELECT t.name FROM users u JOIN teams t ON t.id = u.team_id WHERE u.id = $1", authorId).Scan(&teamName); err != nil {
 		return nil, fmt.Errorf("getting team name of the author: %w", err)
 	}
 
@@ -146,9 +148,14 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asign
 	rows, err := tx.Query(
 		ctx,
 		`
-			SELECT id, username, is_active FROM users
-			WHERE team_name = $1 AND is_active = true AND id != $3 AND
-				($4 = '' OR id NOT IN (SELECT user_id FROM assignments WHERE pr_id = $4))
+			SELECT u.id, u.username, u.is_active
+			FROM users u
+			JOIN teams t ON t.id = u.team_id
+			WHERE t.name = $1 AND
+				u.is_active = true AND
+				u.id != $3 AND
+				($4 = '' OR u.id NOT IN
+					(SELECT user_id FROM assignments WHERE pr_id = $4))
 			LIMIT $2
 		`,
 		teamName,

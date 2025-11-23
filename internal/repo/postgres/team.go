@@ -23,7 +23,9 @@ func (pg *postgres) AddTeam(ctx context.Context, name string, members []domain.U
 		}
 	}()
 
-	res, err := tx.Exec(ctx, "INSERT INTO teams (name) VALUES ($1);", name)
+	var teamId int
+
+	err = tx.QueryRow(ctx, "INSERT INTO teams (name) VALUES ($1) RETURNING id", name).Scan(&teamId)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique constraint violation
@@ -32,15 +34,11 @@ func (pg *postgres) AddTeam(ctx context.Context, name string, members []domain.U
 		return fmt.Errorf("team insertion query: %w", err)
 	}
 
-	if res.RowsAffected() == 0 {
-		return repo.ErrAlreadyExists
-	}
-
 	for _, u := range members {
 		_, err := tx.Exec(
 			ctx,
-			"INSERT INTO users (id, username, is_active, team_name) VALUES ($1, $2, $3, $4);",
-			u.Id, u.Username, u.IsActive, name,
+			"INSERT INTO users (id, username, is_active, team_id) VALUES ($1, $2, $3, $4);",
+			u.Id, u.Username, u.IsActive, teamId,
 		)
 		if err != nil {
 			var pgErr *pgconn.PgError
@@ -77,7 +75,7 @@ func (pg *postgres) GetTeam(ctx context.Context, name string) (*domain.Team, err
 
 	team := &domain.Team{Name: name}
 
-	rows, err := tx.Query(ctx, "SELECT id, username, is_active FROM users WHERE team_name = $1", name)
+	rows, err := tx.Query(ctx, "SELECT u.id, u.username, u.is_active FROM users u JOIN teams t ON t.id = u.team_id WHERE t.name = $1", name)
 	if err != nil {
 		return nil, fmt.Errorf("while querying team members: %w", err)
 	}

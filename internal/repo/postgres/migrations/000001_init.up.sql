@@ -1,19 +1,20 @@
 CREATE TABLE IF NOT EXISTS teams (
-    name TEXT PRIMARY KEY
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL,
     is_active BOOL NOT NULL,
-    team_name TEXT NOT NULL REFERENCES teams(name) ON DELETE RESTRICT
+    team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS pull_requests (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     author_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'MERGED')),
+    status TEXT NOT NULL DEFAULT 'OPEN',
     merged_at TIMESTAMP DEFAULT NULL
 );
 
