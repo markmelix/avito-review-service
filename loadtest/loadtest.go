@@ -176,7 +176,4 @@ func main() {
 
 	fmt.Println("Running vegeta loadtest (duration: %s)", durationString)
 	runVegeta()
-
-	for {
-	}
 }

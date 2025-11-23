@@ -16,7 +16,9 @@ docker compose up
 
 ### Нагрузочное тестирование
 
-Для запуска нагрузочного тестирования нужно остановить production-сервисы и запустить контейнеры другого окружения:
+#### Запуск
+
+Для запуска нагрузочного тестирования остановите production-сервисы и запустите контейнеры соответствующего окружения:
 
 ```bash
 docker compose down
@@ -24,8 +26,10 @@ docker compose -f compose.loadtest.yml down -v
 docker compose -f compose.loadtest.yml up
 ```
 
-```bash
-vegeta report
-```
+После получения репорта в stdout остановите Docker Compose. Результаты тестирования будут лежать в директории `./result`. Далее их можно сконвертировать в график или CLI-представление командами:
 
-### Пояснения к решению
+```bash
+cat result/vegeta_results.bin | vegeta report
+vegeta plot result/vegeta_results.bin > results.html
+xdg-open results.html
+```
