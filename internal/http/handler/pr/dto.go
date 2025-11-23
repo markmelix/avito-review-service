@@ -61,16 +61,21 @@ type PullReqMergeRespDto struct {
 }
 
 func MergeRespDtoFromPullReq(pr *domain.PullReq) *PullReqMergeRespDto {
-	return &PullReqMergeRespDto{
+	r := &PullReqMergeRespDto{
 		PullReq: PullReqMergeRespBody{
 			PullReqId:   pr.Id,
 			PullReqName: pr.Name,
 			AuthorId:    pr.AuthorId,
 			Status:      pr.Status,
 			ReviewerIds: usersToIds(pr.Reviewers),
-			MergedAt:    pr.MergedAt.Format(time.RFC3339),
 		},
 	}
+
+	if pr.MergedAt != nil {
+		r.PullReq.MergedAt = pr.MergedAt.Format(time.RFC3339)
+	}
+
+	return r
 }
 
 type PullReqReassignReqDto struct {

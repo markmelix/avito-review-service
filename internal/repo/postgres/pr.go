@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"review/internal/domain"
 	"review/internal/repo"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func prExists(ctx context.Context, tx pgx.Tx, id string) (bool, error) {
@@ -35,6 +38,12 @@ func (pg *postgres) CreatePullReq(ctx context.Context, pullReqId, name, authorId
 		pullReqId, name, authorId, domain.PullReqOpen,
 	)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return repo.ErrAlreadyExists
+		} else if pgErr != nil && pgErr.Code == "23503" {
+			return repo.ErrNotFound
+		}
 		return fmt.Errorf("pr insertion query: %w", err)
 	}
 
@@ -68,9 +77,34 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 
 	pr := &domain.PullReq{Id: pullReqId}
 
-	err = tx.QueryRow(ctx, "SELECT name, author_id, status, merged_at WHERE id = $1", pullReqId).Scan(&pr.Name, &pr.AuthorId, &pr.Status, &pr.MergedAt)
+	err = tx.QueryRow(ctx, "SELECT name, author_id, status, merged_at FROM pull_requests WHERE id = $1", pullReqId).Scan(&pr.Name, &pr.AuthorId, &pr.Status, &pr.MergedAt)
 	if err != nil {
 		return nil, fmt.Errorf("while querying and scanning pr: %w", err)
+	}
+
+	rows, err := tx.Query(
+		ctx,
+		`
+			SELECT id, username, is_active, team_name FROM users
+			WHERE id IN (SELECT user_id FROM assignments WHERE pr_id = $1)
+		`,
+		pullReqId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("while querying team members: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u domain.User
+		if err := rows.Scan(&u.Id, &u.Username, &u.IsActive, &u.TeamName); err != nil {
+			return nil, fmt.Errorf("while scanning user: %w", err)
+		}
+		pr.Reviewers = append(pr.Reviewers, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("while iterating on the rows: %w", err)
 	}
 
 	return pr, nil

@@ -88,6 +88,16 @@ func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) (*
 		}
 	}
 
+	pr, err = uc.repo.GetPullReq(ctx, pullReqId)
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return nil, ErrPullReqNotFound
+		default:
+			return nil, fmt.Errorf("while getting updated pr: %w", err)
+		}
+	}
+
 	return pr, nil
 }
 
@@ -134,6 +144,16 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 			return nil, "", ErrPullReqNotFound
 		default:
 			return nil, "", fmt.Errorf("while assigning a user with id %v to pr: %w", user.Id, err)
+		}
+	}
+
+	pr, err = uc.repo.GetPullReq(ctx, pullReqId)
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return nil, "", ErrPullReqNotFound
+		default:
+			return nil, "", fmt.Errorf("while getting pr: %w", err)
 		}
 	}
 

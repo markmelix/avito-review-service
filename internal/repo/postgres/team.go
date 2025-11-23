@@ -2,9 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"review/internal/domain"
 	"review/internal/repo"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (pg *postgres) AddTeam(ctx context.Context, name string, members []domain.User) error {
@@ -22,6 +25,10 @@ func (pg *postgres) AddTeam(ctx context.Context, name string, members []domain.U
 
 	res, err := tx.Exec(ctx, "INSERT INTO teams (name) VALUES ($1);", name)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique constraint violation
+			return repo.ErrAlreadyExists
+		}
 		return fmt.Errorf("team insertion query: %w", err)
 	}
 
@@ -36,6 +43,10 @@ func (pg *postgres) AddTeam(ctx context.Context, name string, members []domain.U
 			u.Id, u.Username, u.IsActive, name,
 		)
 		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+				return repo.ErrAlreadyExists
+			}
 			return fmt.Errorf("user insertion query: %w", err)
 		}
 	}
