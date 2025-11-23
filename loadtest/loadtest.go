@@ -174,6 +174,6 @@ func main() {
 	fmt.Println("Writing request bodies")
 	writeVegetTargetFile()
 
-	fmt.Println("Running vegeta loadtest (duration: %s)", durationString)
+	fmt.Printf("Running vegeta loadtest (duration: %s)\n", durationString)
 	runVegeta()
 }
