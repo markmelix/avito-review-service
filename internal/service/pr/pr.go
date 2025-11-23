@@ -132,3 +132,18 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 
 	return nil
 }
+
+func (uc *PullReqService) GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error) {
+	pr, err := uc.repo.GetPullReq(ctx, pullReqId)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return nil, ErrPullReqNotFound
+		default:
+			return nil, fmt.Errorf("while getting pr: %w", err)
+		}
+	}
+
+	return pr, nil
+}
