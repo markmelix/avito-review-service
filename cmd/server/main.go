@@ -27,8 +27,8 @@ func main() {
 	dsn := postgres.DsnFromPassword(getPostgresPassword())
 
 	db := postgres.NewPostgres(ctx, dsn)
-	if err := db.CreateTables(ctx); err != nil {
-		log.Fatalf("failed to create database tables: %v", err)
+	if err := db.ApplyMigrations(ctx); err != nil {
+		log.Fatalf("failed to apply database migrations: %v", err)
 	}
 	defer db.Close()
 

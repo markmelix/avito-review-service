@@ -10,8 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var dsn = ""
-
 func DsnFromPassword(password string) string {
 	return fmt.Sprintf(
 		"postgresql://postgres:%s@postgres:5432/review",
@@ -53,15 +51,4 @@ func NewPostgres(ctx context.Context, dsn string) *postgres {
 
 func (pg *postgres) Close() {
 	pg.db.Close()
-}
-
-//go:embed queries/create_tables.sql
-var createTablesQuery string
-
-func (pg *postgres) CreateTables(ctx context.Context) error {
-	_, err := pg.db.Exec(ctx, createTablesQuery)
-	if err != nil {
-		return fmt.Errorf("error processing create_tables query: %w", err)
-	}
-	return nil
 }
