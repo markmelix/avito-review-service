@@ -1,6 +1,6 @@
 module review
 
-go 1.24.9
+go 1.25.3
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.19.0
