@@ -110,7 +110,7 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 	return pr, nil
 }
 
-func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error) {
+func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int, pullReqId *string) ([]domain.User, error) {
 	tx, err := pg.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error beginning postgres transaction: %w", err)
@@ -138,16 +138,23 @@ func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asign
 
 	users := []domain.User{}
 
+	prId := ""
+	if pullReqId != nil {
+		prId = *pullReqId
+	}
+
 	rows, err := tx.Query(
 		ctx,
 		`
 			SELECT id, username, is_active FROM users
-			WHERE team_name = $1 AND is_active = true AND id != $3
+			WHERE team_name = $1 AND is_active = true AND id != $3 AND
+				($4 = '' OR id NOT IN (SELECT user_id FROM assignments WHERE pr_id = $4))
 			LIMIT $2
 		`,
 		teamName,
 		asigneeLimit,
 		authorId,
+		prId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("while querying team members: %w", err)

@@ -14,7 +14,7 @@ const prAsigneeLimit int = 2
 type PullReqRepo interface {
 	CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error
 	GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error)
-	GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error)
+	GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int, pullReqId *string) ([]domain.User, error)
 	AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int) error
 	ReassignPullReqReviewer(ctx context.Context, pullReqId, oldReviewerId, newReviewerId string) error
 	MarkPullReqMerged(ctx context.Context, pullReqId string) error
@@ -40,7 +40,7 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
-	users, err := uc.repo.GetUsersToAssign(ctx, authorId, prAsigneeLimit)
+	users, err := uc.repo.GetUsersToAssign(ctx, authorId, prAsigneeLimit, nil)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
@@ -122,7 +122,7 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 		return nil, "", ErrReviewerNotAssigned
 	}
 
-	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId, prAsigneeLimit)
+	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId, prAsigneeLimit, &pullReqId)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
