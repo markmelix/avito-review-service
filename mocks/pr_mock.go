@@ -39,16 +39,16 @@ func (_m *MockPullReqRepo) EXPECT() *MockPullReqRepo_Expecter {
 }
 
 // AssignPullReqReviewers provides a mock function for the type MockPullReqRepo
-func (_mock *MockPullReqRepo) AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User) error {
-	ret := _mock.Called(ctx, pullReqId, reviewers)
+func (_mock *MockPullReqRepo) AssignPullReqReviewers(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int) error {
+	ret := _mock.Called(ctx, pullReqId, reviewers, asigneeLimit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AssignPullReqReviewers")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []domain.User) error); ok {
-		r0 = returnFunc(ctx, pullReqId, reviewers)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []domain.User, int) error); ok {
+		r0 = returnFunc(ctx, pullReqId, reviewers, asigneeLimit)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -64,11 +64,12 @@ type MockPullReqRepo_AssignPullReqReviewers_Call struct {
 //   - ctx context.Context
 //   - pullReqId string
 //   - reviewers []domain.User
-func (_e *MockPullReqRepo_Expecter) AssignPullReqReviewers(ctx interface{}, pullReqId interface{}, reviewers interface{}) *MockPullReqRepo_AssignPullReqReviewers_Call {
-	return &MockPullReqRepo_AssignPullReqReviewers_Call{Call: _e.mock.On("AssignPullReqReviewers", ctx, pullReqId, reviewers)}
+//   - asigneeLimit int
+func (_e *MockPullReqRepo_Expecter) AssignPullReqReviewers(ctx interface{}, pullReqId interface{}, reviewers interface{}, asigneeLimit interface{}) *MockPullReqRepo_AssignPullReqReviewers_Call {
+	return &MockPullReqRepo_AssignPullReqReviewers_Call{Call: _e.mock.On("AssignPullReqReviewers", ctx, pullReqId, reviewers, asigneeLimit)}
 }
 
-func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) Run(run func(ctx context.Context, pullReqId string, reviewers []domain.User)) *MockPullReqRepo_AssignPullReqReviewers_Call {
+func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) Run(run func(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int)) *MockPullReqRepo_AssignPullReqReviewers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -82,10 +83,15 @@ func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) Run(run func(ctx context.
 		if args[2] != nil {
 			arg2 = args[2].([]domain.User)
 		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -96,7 +102,7 @@ func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) Return(err error) *MockPu
 	return _c
 }
 
-func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) RunAndReturn(run func(ctx context.Context, pullReqId string, reviewers []domain.User) error) *MockPullReqRepo_AssignPullReqReviewers_Call {
+func (_c *MockPullReqRepo_AssignPullReqReviewers_Call) RunAndReturn(run func(ctx context.Context, pullReqId string, reviewers []domain.User, asigneeLimit int) error) *MockPullReqRepo_AssignPullReqReviewers_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -171,22 +177,24 @@ func (_c *MockPullReqRepo_CreatePullReq_Call) RunAndReturn(run func(ctx context.
 }
 
 // GetPullReq provides a mock function for the type MockPullReqRepo
-func (_mock *MockPullReqRepo) GetPullReq(ctx context.Context, pullReqId string) (domain.PullReq, error) {
+func (_mock *MockPullReqRepo) GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error) {
 	ret := _mock.Called(ctx, pullReqId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetPullReq")
 	}
 
-	var r0 domain.PullReq
+	var r0 *domain.PullReq
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domain.PullReq, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.PullReq, error)); ok {
 		return returnFunc(ctx, pullReqId)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domain.PullReq); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.PullReq); ok {
 		r0 = returnFunc(ctx, pullReqId)
 	} else {
-		r0 = ret.Get(0).(domain.PullReq)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.PullReq)
+		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = returnFunc(ctx, pullReqId)
@@ -226,19 +234,19 @@ func (_c *MockPullReqRepo_GetPullReq_Call) Run(run func(ctx context.Context, pul
 	return _c
 }
 
-func (_c *MockPullReqRepo_GetPullReq_Call) Return(pullReq domain.PullReq, err error) *MockPullReqRepo_GetPullReq_Call {
+func (_c *MockPullReqRepo_GetPullReq_Call) Return(pullReq *domain.PullReq, err error) *MockPullReqRepo_GetPullReq_Call {
 	_c.Call.Return(pullReq, err)
 	return _c
 }
 
-func (_c *MockPullReqRepo_GetPullReq_Call) RunAndReturn(run func(ctx context.Context, pullReqId string) (domain.PullReq, error)) *MockPullReqRepo_GetPullReq_Call {
+func (_c *MockPullReqRepo_GetPullReq_Call) RunAndReturn(run func(ctx context.Context, pullReqId string) (*domain.PullReq, error)) *MockPullReqRepo_GetPullReq_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUsersToAssign provides a mock function for the type MockPullReqRepo
-func (_mock *MockPullReqRepo) GetUsersToAssign(ctx context.Context, authorId string) ([]domain.User, error) {
-	ret := _mock.Called(ctx, authorId)
+func (_mock *MockPullReqRepo) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error) {
+	ret := _mock.Called(ctx, authorId, asigneeLimit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUsersToAssign")
@@ -246,18 +254,18 @@ func (_mock *MockPullReqRepo) GetUsersToAssign(ctx context.Context, authorId str
 
 	var r0 []domain.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]domain.User, error)); ok {
-		return returnFunc(ctx, authorId)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) ([]domain.User, error)); ok {
+		return returnFunc(ctx, authorId, asigneeLimit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []domain.User); ok {
-		r0 = returnFunc(ctx, authorId)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) []domain.User); ok {
+		r0 = returnFunc(ctx, authorId, asigneeLimit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.User)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = returnFunc(ctx, authorId)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
+		r1 = returnFunc(ctx, authorId, asigneeLimit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -272,11 +280,12 @@ type MockPullReqRepo_GetUsersToAssign_Call struct {
 // GetUsersToAssign is a helper method to define mock.On call
 //   - ctx context.Context
 //   - authorId string
-func (_e *MockPullReqRepo_Expecter) GetUsersToAssign(ctx interface{}, authorId interface{}) *MockPullReqRepo_GetUsersToAssign_Call {
-	return &MockPullReqRepo_GetUsersToAssign_Call{Call: _e.mock.On("GetUsersToAssign", ctx, authorId)}
+//   - asigneeLimit int
+func (_e *MockPullReqRepo_Expecter) GetUsersToAssign(ctx interface{}, authorId interface{}, asigneeLimit interface{}) *MockPullReqRepo_GetUsersToAssign_Call {
+	return &MockPullReqRepo_GetUsersToAssign_Call{Call: _e.mock.On("GetUsersToAssign", ctx, authorId, asigneeLimit)}
 }
 
-func (_c *MockPullReqRepo_GetUsersToAssign_Call) Run(run func(ctx context.Context, authorId string)) *MockPullReqRepo_GetUsersToAssign_Call {
+func (_c *MockPullReqRepo_GetUsersToAssign_Call) Run(run func(ctx context.Context, authorId string, asigneeLimit int)) *MockPullReqRepo_GetUsersToAssign_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -286,9 +295,14 @@ func (_c *MockPullReqRepo_GetUsersToAssign_Call) Run(run func(ctx context.Contex
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -299,7 +313,7 @@ func (_c *MockPullReqRepo_GetUsersToAssign_Call) Return(users []domain.User, err
 	return _c
 }
 
-func (_c *MockPullReqRepo_GetUsersToAssign_Call) RunAndReturn(run func(ctx context.Context, authorId string) ([]domain.User, error)) *MockPullReqRepo_GetUsersToAssign_Call {
+func (_c *MockPullReqRepo_GetUsersToAssign_Call) RunAndReturn(run func(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error)) *MockPullReqRepo_GetUsersToAssign_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -357,6 +371,75 @@ func (_c *MockPullReqRepo_MarkPullReqMerged_Call) Return(err error) *MockPullReq
 }
 
 func (_c *MockPullReqRepo_MarkPullReqMerged_Call) RunAndReturn(run func(ctx context.Context, pullReqId string) error) *MockPullReqRepo_MarkPullReqMerged_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ReassignPullReqReviewer provides a mock function for the type MockPullReqRepo
+func (_mock *MockPullReqRepo) ReassignPullReqReviewer(ctx context.Context, pullReqId string, oldReviewerId string, newReviewerId string) error {
+	ret := _mock.Called(ctx, pullReqId, oldReviewerId, newReviewerId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReassignPullReqReviewer")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = returnFunc(ctx, pullReqId, oldReviewerId, newReviewerId)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockPullReqRepo_ReassignPullReqReviewer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReassignPullReqReviewer'
+type MockPullReqRepo_ReassignPullReqReviewer_Call struct {
+	*mock.Call
+}
+
+// ReassignPullReqReviewer is a helper method to define mock.On call
+//   - ctx context.Context
+//   - pullReqId string
+//   - oldReviewerId string
+//   - newReviewerId string
+func (_e *MockPullReqRepo_Expecter) ReassignPullReqReviewer(ctx interface{}, pullReqId interface{}, oldReviewerId interface{}, newReviewerId interface{}) *MockPullReqRepo_ReassignPullReqReviewer_Call {
+	return &MockPullReqRepo_ReassignPullReqReviewer_Call{Call: _e.mock.On("ReassignPullReqReviewer", ctx, pullReqId, oldReviewerId, newReviewerId)}
+}
+
+func (_c *MockPullReqRepo_ReassignPullReqReviewer_Call) Run(run func(ctx context.Context, pullReqId string, oldReviewerId string, newReviewerId string)) *MockPullReqRepo_ReassignPullReqReviewer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPullReqRepo_ReassignPullReqReviewer_Call) Return(err error) *MockPullReqRepo_ReassignPullReqReviewer_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPullReqRepo_ReassignPullReqReviewer_Call) RunAndReturn(run func(ctx context.Context, pullReqId string, oldReviewerId string, newReviewerId string) error) *MockPullReqRepo_ReassignPullReqReviewer_Call {
 	_c.Call.Return(run)
 	return _c
 }

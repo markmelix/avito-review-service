@@ -106,6 +106,74 @@ func (_c *MockUserRepo_GetReviewAssignments_Call) RunAndReturn(run func(ctx cont
 	return _c
 }
 
+// GetUser provides a mock function for the type MockUserRepo
+func (_mock *MockUserRepo) GetUser(ctx context.Context, id string) (*domain.User, error) {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUser")
+	}
+
+	var r0 *domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.User, error)); ok {
+		return returnFunc(ctx, id)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.User); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockUserRepo_GetUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUser'
+type MockUserRepo_GetUser_Call struct {
+	*mock.Call
+}
+
+// GetUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *MockUserRepo_Expecter) GetUser(ctx interface{}, id interface{}) *MockUserRepo_GetUser_Call {
+	return &MockUserRepo_GetUser_Call{Call: _e.mock.On("GetUser", ctx, id)}
+}
+
+func (_c *MockUserRepo_GetUser_Call) Run(run func(ctx context.Context, id string)) *MockUserRepo_GetUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockUserRepo_GetUser_Call) Return(user *domain.User, err error) *MockUserRepo_GetUser_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockUserRepo_GetUser_Call) RunAndReturn(run func(ctx context.Context, id string) (*domain.User, error)) *MockUserRepo_GetUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetIsActiveUser provides a mock function for the type MockUserRepo
 func (_mock *MockUserRepo) SetIsActiveUser(ctx context.Context, id string, isActive bool) error {
 	ret := _mock.Called(ctx, id, isActive)

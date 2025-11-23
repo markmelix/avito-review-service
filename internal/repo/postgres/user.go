@@ -17,6 +17,37 @@ func userExists(ctx context.Context, tx pgx.Tx, id string) (bool, error) {
 	return exists, nil
 }
 
+func (pg *postgres) GetUser(ctx context.Context, id string) (*domain.User, error) {
+	tx, err := pg.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error beginning postgres transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
+
+	exists, err := userExists(ctx, tx, id)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, repo.ErrNotFound
+	}
+
+	u := &domain.User{Id: id}
+
+	tx.QueryRow(ctx, "SELECT username, is_active, team_name FROM users WHERE id = $1", id).Scan(&u.Username, &u.IsActive, &u.TeamName)
+	if err != nil {
+		return nil, fmt.Errorf("user is_active update query: %w", err)
+	}
+
+	return u, nil
+}
+
 func (pg *postgres) SetIsActiveUser(ctx context.Context, id string, isActive bool) error {
 	tx, err := pg.db.Begin(ctx)
 	if err != nil {

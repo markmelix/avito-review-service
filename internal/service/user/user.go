@@ -9,6 +9,7 @@ import (
 )
 
 type UserRepo interface {
+	GetUser(ctx context.Context, id string) (*domain.User, error)
 	SetIsActiveUser(ctx context.Context, id string, isActive bool) error
 	GetReviewAssignments(ctx context.Context, id string) ([]domain.PullReq, error)
 }
@@ -23,6 +24,17 @@ type UserService struct {
 
 func NewUserService(repo UserRepo) *UserService {
 	return &UserService{repo}
+}
+
+func (uc *UserService) GetUser(ctx context.Context, id string) (*domain.User, error) {
+	u, err := uc.repo.GetUser(ctx, id)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("toggling user: %w", err)
+	}
+	return u, nil
 }
 
 func (uc *UserService) SetIsActiveUser(ctx context.Context, id string, isActive bool) error {
