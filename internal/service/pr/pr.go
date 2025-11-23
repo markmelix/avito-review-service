@@ -28,6 +28,16 @@ func NewPullReqService(repo PullReqRepo) *PullReqService {
 	return &PullReqService{repo}
 }
 
+func retainActiveUsers(users []domain.User) []domain.User {
+	res := []domain.User{}
+	for _, u := range users {
+		if u.IsActive {
+			res = append(res, u)
+		}
+	}
+	return res
+}
+
 func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, authorId string) error {
 	if err := uc.repo.CreatePullReq(ctx, pullReqId, name, authorId); err != nil {
 		switch {
@@ -48,6 +58,11 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		default:
 			return fmt.Errorf("while getting pr users to assign: %w", err)
 		}
+	}
+
+	users = retainActiveUsers(users)
+	if len(users) == 0 {
+		return nil
 	}
 
 	if len(users) > prAsigneeLimit {
@@ -135,6 +150,8 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 			return nil, "", fmt.Errorf("while getting pr users to assign: %w", err)
 		}
 	}
+
+	users = retainActiveUsers(users)
 
 	if len(users) == 0 {
 		return nil, "", ErrNoReassignCandidate

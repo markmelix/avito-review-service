@@ -19,6 +19,7 @@ func TestPullReqService_CreatePullReq_WontAssignMoreThanTwoReviewers(t *testing.
 		prId     = "pr-1001"
 		prName   = "Add search"
 		autId    = "u1"
+		users    = []domain.User{{IsActive: true}, {IsActive: true}, {IsActive: true}}
 	)
 
 	mockRepo.
@@ -26,7 +27,7 @@ func TestPullReqService_CreatePullReq_WontAssignMoreThanTwoReviewers(t *testing.
 		Return(nil)
 	mockRepo.
 		On("GetUsersToAssign", mock.Anything, autId, prRevLim, mock.Anything).
-		Return([]domain.User{{}, {}, {}}, nil)
+		Return(users, nil)
 
 	err := uc.CreatePullReq(ctx, prId, prName, autId)
 
@@ -37,12 +38,12 @@ func TestPullReqService_CreatePullReq_WontAssignMoreThanTwoReviewers(t *testing.
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPullReqService_CreatePullReq_WillAssignReviewers(t *testing.T) {
+func TestPullReqService_CreatePullReq_WontAssignInactiveUsers(t *testing.T) {
 	var (
 		ctx      = context.Background()
 		mockRepo = &mocks.MockPullReqRepo{}
 		uc       = NewPullReqService(mockRepo)
-		users    = []domain.User{{}, {}}
+		users    = []domain.User{{IsActive: false}, {IsActive: false}}
 		prRevLim = 2
 		prId     = "pr-1001"
 		prName   = "Add search"
@@ -55,9 +56,40 @@ func TestPullReqService_CreatePullReq_WillAssignReviewers(t *testing.T) {
 	mockRepo.
 		On("GetUsersToAssign", mock.Anything, autId, prRevLim, mock.Anything).
 		Return(users, nil)
+
+	err := uc.CreatePullReq(ctx, prId, prName, autId)
+
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestPullReqService_CreatePullReq_AssignsSuccessfully(t *testing.T) {
+	var (
+		ctx      = context.Background()
+		mockRepo = &mocks.MockPullReqRepo{}
+		uc       = NewPullReqService(mockRepo)
+		users    = []domain.User{{IsActive: true}, {IsActive: true}}
+		prRevLim = 2
+		prId     = "pr-1001"
+		prName   = "Add search"
+		autId    = "u1"
+	)
+
+	mockRepo.
+		On("CreatePullReq", mock.Anything, prId, prName, autId).
+		Return(nil).
+		Once()
+	mockRepo.
+		On("GetUsersToAssign", mock.Anything, autId, prRevLim, mock.Anything).
+		Return(users, nil).
+		Once()
 	mockRepo.
 		On("AssignPullReqReviewers", mock.Anything, prId, users, prRevLim).
-		Return(nil)
+		Return(nil).
+		Once()
 
 	err := uc.CreatePullReq(ctx, prId, prName, autId)
 
@@ -206,7 +238,7 @@ func TestPullReqService_ReassignReviewer_ReassignsSuccessfully(t *testing.T) {
 		revId    = "u1"
 		newId    = "u2"
 		prId     = "pr-1001"
-		users    = []domain.User{{Id: newId}}
+		users    = []domain.User{{Id: newId, IsActive: true}}
 		pr       = &domain.PullReq{
 			Status:    domain.PullReqOpen,
 			Reviewers: []domain.User{{Id: revId}},
