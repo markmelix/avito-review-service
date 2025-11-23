@@ -74,49 +74,66 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 	return nil
 }
 
-func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) error {
-	if err := uc.repo.MarkPullReqMerged(ctx, pullReqId); err != nil {
-		switch {
-		case errors.Is(err, repo.ErrNotFound):
-			return ErrPullReqNotFound
-		default:
-			return fmt.Errorf("while merging pr: %w", err)
-		}
-	}
-	return nil
-}
-
-func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldReviewerId string) error {
+func (uc *PullReqService) MergePullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error) {
 	pr, err := uc.repo.GetPullReq(ctx, pullReqId)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
-			return ErrPullReqNotFound
+			return nil, ErrPullReqNotFound
 		default:
-			return fmt.Errorf("while getting pr: %w", err)
+			return nil, fmt.Errorf("while getting pr: %w", err)
 		}
 	}
 
 	if pr.Status == domain.PullReqMerged {
-		return ErrReassignOnMerged
+		return pr, nil
+	}
+
+	if err := uc.repo.MarkPullReqMerged(ctx, pullReqId); err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return nil, ErrPullReqNotFound
+		default:
+			return nil, fmt.Errorf("while merging pr: %w", err)
+		}
+	}
+
+	return pr, nil
+}
+
+// Reassigns reviewer with an active one from the team of the reviewer being
+// replaced by and returns the PR and id of the user to be replaced with
+func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldReviewerId string) (*domain.PullReq, string, error) {
+	pr, err := uc.repo.GetPullReq(ctx, pullReqId)
+	if err != nil {
+		switch {
+		case errors.Is(err, repo.ErrNotFound):
+			return nil, "", ErrPullReqNotFound
+		default:
+			return nil, "", fmt.Errorf("while getting pr: %w", err)
+		}
+	}
+
+	if pr.Status == domain.PullReqMerged {
+		return nil, "", ErrReassignOnMerged
 	}
 
 	if !pr.HasReviewer(oldReviewerId) {
-		return ErrReviewerNotAssigned
+		return nil, "", ErrReviewerNotAssigned
 	}
 
 	users, err := uc.repo.GetUsersToAssign(ctx, oldReviewerId, prAsigneeLimit)
 	if err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
-			return ErrAuthorNotFound
+			return nil, "", ErrAuthorNotFound
 		default:
-			return fmt.Errorf("while getting pr users to assign: %w", err)
+			return nil, "", fmt.Errorf("while getting pr users to assign: %w", err)
 		}
 	}
 
 	if len(users) == 0 {
-		return ErrNoReassignCandidate
+		return nil, "", ErrNoReassignCandidate
 	}
 
 	user := users[rand.Intn(len(users))]
@@ -124,13 +141,13 @@ func (uc *PullReqService) ReassignReviewer(ctx context.Context, pullReqId, oldRe
 	if err := uc.repo.ReassignPullReqReviewer(ctx, pullReqId, oldReviewerId, user.Id); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
-			return ErrPullReqNotFound
+			return nil, "", ErrPullReqNotFound
 		default:
-			return fmt.Errorf("while assigning a user with id %v to pr: %w", user.Id, err)
+			return nil, "", fmt.Errorf("while assigning a user with id %v to pr: %w", user.Id, err)
 		}
 	}
 
-	return nil
+	return pr, user.Id, nil
 }
 
 func (uc *PullReqService) GetPullReq(ctx context.Context, pullReqId string) (*domain.PullReq, error) {

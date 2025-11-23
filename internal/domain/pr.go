@@ -1,6 +1,9 @@
 package domain
 
-import "slices"
+import (
+	"slices"
+	"time"
+)
 
 type PullReqStatus string
 
@@ -15,6 +18,7 @@ type PullReq struct {
 	AuthorId  string        `json:"author_id"`
 	Status    PullReqStatus `json:"status"`
 	Reviewers []User        `json:"-"`
+	MergedAt  *time.Time    `json:"-"`
 }
 
 func (pr PullReq) HasReviewer(id string) bool {

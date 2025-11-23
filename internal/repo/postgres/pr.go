@@ -3,10 +3,9 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"review/internal/domain"
 	"review/internal/repo"
-
-	"github.com/jackc/pgx/v5"
 )
 
 func prExists(ctx context.Context, tx pgx.Tx, id string) (bool, error) {
@@ -69,7 +68,7 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 
 	pr := &domain.PullReq{Id: pullReqId}
 
-	err = tx.QueryRow(ctx, "SELECT name, author_id, status WHERE id = $1", pullReqId).Scan(&pr.Name, &pr.AuthorId, &pr.Status)
+	err = tx.QueryRow(ctx, "SELECT name, author_id, status, merged_at WHERE id = $1", pullReqId).Scan(&pr.Name, &pr.AuthorId, &pr.Status, &pr.MergedAt)
 	if err != nil {
 		return nil, fmt.Errorf("while querying and scanning pr: %w", err)
 	}
@@ -224,7 +223,7 @@ func (pg *postgres) MarkPullReqMerged(ctx context.Context, pullReqId string) err
 		return repo.ErrNotFound
 	}
 
-	_, err = tx.Exec(ctx, "UPDATE pull_requests SET status = $1 WHERE id = $2", domain.PullReqMerged, pullReqId)
+	_, err = tx.Exec(ctx, "UPDATE pull_requests SET status = $1, merged_at = NOW() WHERE id = $2", domain.PullReqMerged, pullReqId)
 	if err != nil {
 		return fmt.Errorf("updating pr making it merged: %w", err)
 	}
