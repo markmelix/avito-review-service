@@ -10,11 +10,11 @@ const (
 )
 
 type PullReq struct {
-	Id        string
-	Name      string
-	AuthorId  string
-	Status    PullReqStatus
-	Reviewers []User
+	Id        string        `json:"pull_request_id"`
+	Name      string        `json:"pull_request_name"`
+	AuthorId  string        `json:"author_id"`
+	Status    PullReqStatus `json:"status"`
+	Reviewers []User        `json:"-"`
 }
 
 func (pr PullReq) HasReviewer(id string) bool {
