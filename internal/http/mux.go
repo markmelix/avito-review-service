@@ -23,6 +23,12 @@ func NewMux(repo service.Repo) http.Handler {
 	prMux := pr.NewPullReqMux(pr.NewPullReqHandler(pr_uc.NewPullReqService(repo)))
 
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
 	joinMux(mux, teamMux, "/team")
 	joinMux(mux, userMux, "/users")
 	joinMux(mux, prMux, "/pullRequest")

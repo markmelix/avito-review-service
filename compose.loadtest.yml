@@ -1,0 +1,54 @@
+services:
+  api_loadtest:
+    build: .
+    container_name: api_loadtest
+    environment:
+      SERVER_PORT: 8080
+      POSTGRES_PASSWORD: toor
+    ports:
+      - "8080:8080"
+    depends_on:
+      db_loadtest:
+          condition: service_healthy
+    links:
+      - "db_loadtest:postgres"
+    networks:
+      - loadtest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 3s
+
+  db_loadtest:
+    image: postgres:18
+    container_name: db_loadtest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: review
+      POSTGRES_PASSWORD: toor
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d review'"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - loadtest
+
+
+  loadtest:
+    build: ./loadtest
+    depends_on: [api_loadtest]
+    links:
+      - "api_loadtest:api"
+    networks:
+      - loadtest
+    volumes:
+      - "./result:/result"
+
+networks:
+  loadtest:
