@@ -50,6 +50,10 @@ func (uc *PullReqService) CreatePullReq(ctx context.Context, pullReqId, name, au
 		}
 	}
 
+	if len(users) > prAsigneeLimit {
+		return ErrTooMuchAsignees
+	}
+
 	if err := uc.repo.AssignPullReqReviewers(ctx, pullReqId, users, prAsigneeLimit); err != nil {
 		switch {
 		case errors.Is(err, repo.ErrNotFound):
