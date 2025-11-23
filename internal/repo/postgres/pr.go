@@ -76,7 +76,7 @@ func (pg *postgres) GetPullReq(ctx context.Context, pullReqId string) (*domain.P
 	return pr, nil
 }
 
-func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit uint) ([]domain.User, error) {
+func (pg *postgres) GetUsersToAssign(ctx context.Context, authorId string, asigneeLimit int) ([]domain.User, error) {
 	tx, err := pg.db.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error beginning postgres transaction: %w", err)

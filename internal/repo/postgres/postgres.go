@@ -10,9 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var dsn = fmt.Sprintf("postgresql://postgres:%s@postgres:5432/postgres", os.Getenv("POSTGRES_PASSWORD"))
+var dsn = ""
 
-func getConfig() *pgxpool.Config {
+func DsnFromPassword(password string) string {
+	return fmt.Sprintf(
+		"postgresql://postgres:%s@postgres:5432/review",
+		os.Getenv("POSTGRES_PASSWORD"),
+	)
+}
+
+func getConfig(dsn string) *pgxpool.Config {
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to parse db config: %v\n", err)
@@ -30,9 +37,9 @@ var (
 	pgOnce     sync.Once
 )
 
-func NewPostgres(ctx context.Context) *postgres {
+func NewPostgres(ctx context.Context, dsn string) *postgres {
 	pgOnce.Do(func() {
-		db, err := pgxpool.NewWithConfig(ctx, getConfig())
+		db, err := pgxpool.NewWithConfig(ctx, getConfig(dsn))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 			os.Exit(1)
