@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	handler "review/internal/http"
@@ -20,7 +20,8 @@ func getPostgresPassword() string {
 }
 
 func main() {
-	log.SetFlags(log.LstdFlags)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	ctx := context.Background()
 
@@ -28,14 +29,15 @@ func main() {
 
 	db := postgres.NewPostgres(ctx, dsn)
 	if err := db.ApplyMigrations(ctx); err != nil {
-		log.Fatalf("failed to apply database migrations: %v", err)
+		slog.Error("failed to apply database migrations", "error", err)
+		return
 	}
 	defer db.Close()
 
 	mux := handler.NewMux(db)
 
-	log.Printf("Starting http-server on %s\n", httpServerAddress)
+	slog.Info("Starting http-server", "address", httpServerAddress)
 	if err := http.ListenAndServe(httpServerAddress, mux); err != nil {
-		log.Fatal("Error while serving http-server: %w", err)
+		slog.Error("Error while serving http-server", "error", err)
 	}
 }
