@@ -20,7 +20,7 @@ func NewTeamHandler(usecase *team.TeamService) *TeamHandler {
 	return &TeamHandler{usecase}
 }
 
-type TeamAddedDto struct {
+type TeamAddDto struct {
 	Team domain.Team `json:"team"`
 }
 
@@ -54,7 +54,7 @@ func (h *TeamHandler) add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := &TeamAddedDto{t}
+	resp := &TeamAddDto{t}
 	respJson, err := json.Marshal(resp)
 	if err != nil {
 		helper.WriteUndefinedError(w, fmt.Errorf("could not convert response to json: %w", err))
