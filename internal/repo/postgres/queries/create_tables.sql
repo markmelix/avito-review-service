@@ -9,13 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
     team_name TEXT NOT NULL REFERENCES teams(name) ON DELETE RESTRICT
 );
 
-CREATE TYPE pr_status AS ENUM ('OPEN', 'MERGED');
-
 CREATE TABLE IF NOT EXISTS pull_requests (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     author_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    status pr_status NOT NULL DEFAULT 'OPEN',
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'MERGED')),
     merged_at TIMESTAMP DEFAULT NULL
 );
 
