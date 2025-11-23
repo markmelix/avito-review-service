@@ -13,11 +13,6 @@ type TeamRepo interface {
 	GetTeam(ctx context.Context, name string) (*domain.Team, error)
 }
 
-var (
-	ErrTeamAlreadyExists = errors.New("team already exists")
-	ErrTeamNotFound      = errors.New("team not found")
-)
-
 type TeamService struct {
 	repo TeamRepo
 }

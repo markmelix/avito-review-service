@@ -14,10 +14,6 @@ type UserRepo interface {
 	GetReviewAssignments(ctx context.Context, id string) ([]domain.PullReq, error)
 }
 
-var (
-	ErrUserNotFound = errors.New("user not found")
-)
-
 type UserService struct {
 	repo UserRepo
 }
